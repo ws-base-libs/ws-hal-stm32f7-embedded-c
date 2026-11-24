@@ -323,6 +323,20 @@ ws_rcc_error_t ws_rcc_enable_periph(ws_rcc_periph_t periph)
             (void)rd;
         }
         return WS_ERR_OK(ws_rcc_error_t);
+    case WS_RCC_PERIPH_SPI1:
+        RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
+        {
+            volatile uint32_t rd = RCC->APB2ENR;
+            (void)rd;
+        }
+        return WS_ERR_OK(ws_rcc_error_t);
+    case WS_RCC_PERIPH_SPI2:
+        RCC->APB1ENR |= RCC_APB1ENR_SPI2EN;
+        {
+            volatile uint32_t rd = RCC->APB1ENR;
+            (void)rd;
+        }
+        return WS_ERR_OK(ws_rcc_error_t);
     default:
         return WS_ERR(ws_rcc_error_t, WS_RCC_BAD_PERIPH, WS_SEVERITY_RECOVERABLE,
                       "peripheral out of range", "ws_rcc.enable_periph");

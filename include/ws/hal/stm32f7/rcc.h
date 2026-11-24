@@ -49,9 +49,11 @@ typedef enum {
     WS_RCC_PERIPH_TIM2 = 0,
     WS_RCC_PERIPH_USART1,
     WS_RCC_PERIPH_USART6,
+    WS_RCC_PERIPH_SPI1,
+    WS_RCC_PERIPH_SPI2,
 } ws_rcc_periph_t;
 
-#define WS_RCC_PERIPH_COUNT (WS_RCC_PERIPH_USART6 + 1)
+#define WS_RCC_PERIPH_COUNT (WS_RCC_PERIPH_SPI2 + 1)
 
 /**
  * @brief Clock-tree configuration (frequencies & source as config inputs).

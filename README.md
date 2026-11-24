@@ -12,10 +12,11 @@ Register access lives **only** in `src/*.c` over CMSIS register definitions (`ST
 | `<ws/hal/stm32f7/gpio.h>` | `src/gpio.c` / `fake/gpio_fake.c` | Includes `rcc.h`; configures `OTYPER`/`OSPEEDR`/`PUPDR`/`AFR` before `MODER` (glitch-free AF switch); `ws_gpio_init/write/read/toggle` |
 | `<ws/hal/stm32f7/timebase.h>` | `src/timebase.c` / `fake/timebase_fake.c` | Includes `rcc.h`; 64-bit monotonic µs clock on **32-bit TIM2** (`TIM2_IRQHandler`, zero conflict with FreeRTOS `SysTick_Handler`) with wrap-race-free `ws_time_us()` and delays |
 | `<ws/hal/stm32f7/uart.h>` | `src/uart.c` / `fake/uart_fake.c` | Includes `gpio.h` + `timebase.h`; multi-instance `ws_uart_t` (`WS_UART_1`, `WS_UART_6`), clock via `rcc.h`, rounded BRR, bounded `ws_time_us()` TX timeouts, typed `WS_UART_NO_DATA` RX |
+| `<ws/hal/stm32f7/spi.h>` | `src/spi.c` / `fake/spi_fake.c` | Includes `gpio.h` + `timebase.h`; synchronous master `ws_spi_t` (`WS_SPI_1`, `WS_SPI_2`), Mode 0–3, automatic prescaler `<= max_hz`, optional MOSI/MISO, 8-bit `FRXTH` FIFO handling, bounded timeouts, OVR/MODF/FRE detection |
 
 ## Examples
 
-Runnable host-fake examples live under `examples/`: `rcc_clocks.c`, `gpio_blink.c`, `timebase_delay.c`, `uart_hello.c`.
+Runnable host-fake examples live under `examples/`: `rcc_clocks.c`, `gpio_blink.c`, `timebase_delay.c`, `uart_hello.c`, `spi_transfer.c`.
 
 ## Host fake test seams (`WS_HAL_STM32F7_HOST_FAKE`)
 
@@ -23,6 +24,7 @@ Runnable host-fake examples live under `examples/`: `rcc_clocks.c`, `gpio_blink.
 - **GPIO:** `ws_gpio_fake_reset`, `ws_gpio_fake_inject_read`, `ws_gpio_fake_get_pin_state`
 - **Timebase:** `ws_timebase_fake_reset`, `ws_timebase_fake_set_us`, `ws_timebase_fake_advance_us`
 - **UART:** `ws_uart_fake_reset`, `ws_uart_fake_take_output`, `ws_uart_fake_inject_rx`, `ws_uart_fake_set_tx_stall`
+- **SPI:** `ws_spi_fake_reset`, `ws_spi_fake_queue_rx`, `ws_spi_fake_take_tx`, `ws_spi_fake_set_busy`, `ws_spi_fake_set_timeout`, `ws_spi_fake_set_bus_error`, `ws_spi_fake_transfer_count`, `ws_spi_fake_actual_hz`
 
 ## Build & test (standalone)
 
@@ -38,4 +40,5 @@ Target cross-check compiles `src/*.c` with `-mcpu=cortex-m7 -mthumb -mfpu=fpv5-s
 - **FPU precision:** STM32F745/F746 carries a **single-precision** FPU (`-mfpu=fpv5-sp-d16`, DS10916 Rev 5); never compile with `-mfpu=fpv5-d16`.
 - **STM32F746G-DISCO HSE:** X2 is an active 25 MHz oscillator driving `PH0/OSC_IN` (UM1907) — set `.hse_hz = 25000000u, .hse_bypass = true`.
 - **No SysTick squat:** `timebase.c` owns `TIM2_IRQHandler`, leaving `SysTick_Handler` free for FreeRTOS.
-- **No direct `RCC->` pokes outside `rcc.c`:** `gpio.c`, `timebase.c`, and `uart.c` enable their clocks strictly through `rcc.h`.
+- **No direct `RCC->` pokes outside `rcc.c`:** `gpio.c`, `timebase.c`, `uart.c`, and `spi.c` enable their clocks strictly through `rcc.h`.
+- **STM32F7 SPI 8-bit FIFO packing:** Unlike STM32F4, STM32F7 SPI carries a 32-bit FIFO with programmable data size (`CR2.DS=7`) and RX threshold (`CR2.FRXTH=1`). `src/spi.c` accesses `SPIx->DR` strictly through `*(volatile uint8_t *)&regs->DR` so each write shifts one byte instead of packing two (RM0385 §33.5.9).

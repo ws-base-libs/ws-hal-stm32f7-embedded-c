@@ -73,6 +73,10 @@ int main(void)
 
     check(WS_OK(ws_rcc_enable_periph(WS_RCC_PERIPH_TIM2)), "enable TIM2 ok");
     check(ws_rcc_fake_periph_enabled(WS_RCC_PERIPH_TIM2), "TIM2 clock active");
+    check(WS_OK(ws_rcc_enable_periph(WS_RCC_PERIPH_SPI1)), "enable SPI1 ok");
+    check(ws_rcc_fake_periph_enabled(WS_RCC_PERIPH_SPI1), "SPI1 clock active");
+    check(WS_OK(ws_rcc_enable_periph(WS_RCC_PERIPH_SPI2)), "enable SPI2 ok");
+    check(ws_rcc_fake_periph_enabled(WS_RCC_PERIPH_SPI2), "SPI2 clock active");
     check(ws_rcc_enable_periph((ws_rcc_periph_t)99).code == WS_RCC_BAD_PERIPH,
           "bad periph rejected");
 

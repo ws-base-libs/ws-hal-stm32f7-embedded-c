@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.21)
 
-# ws-hal-stm32f7-embedded-c — STM32F7 HAL base library (rcc, gpio, timebase, uart).
+# ws-hal-stm32f7-embedded-c — STM32F7 HAL base library (rcc, gpio, timebase, uart, spi).
 project(ws-hal-stm32f7-embedded-c
-    VERSION 0.1.0
-    DESCRIPTION "ws HAL base library for STM32F7: rcc + gpio + timebase + uart"
+    VERSION 0.2.0
+    DESCRIPTION "ws HAL base library for STM32F7: rcc + gpio + timebase + uart + spi"
     LANGUAGES C)
 
 set(CMAKE_C_STANDARD 17)
@@ -72,7 +72,8 @@ if(WS_HAL_STM32F7_USE_FAKE)
         fake/rcc_fake.c
         fake/gpio_fake.c
         fake/timebase_fake.c
-        fake/uart_fake.c)
+        fake/uart_fake.c
+        fake/spi_fake.c)
     target_compile_definitions(ws-hal-stm32f7-embedded-c PUBLIC WS_HAL_STM32F7_HOST_FAKE)
 else()
     if(NOT _ws_cmsis_valid)
@@ -85,7 +86,8 @@ else()
         src/rcc.c
         src/gpio.c
         src/timebase.c
-        src/uart.c)
+        src/uart.c
+        src/spi.c)
     target_compile_definitions(ws-hal-stm32f7-embedded-c PRIVATE STM32F746xx)
     target_include_directories(ws-hal-stm32f7-embedded-c PRIVATE ${_ws_cmsis_dirs})
 endif()
@@ -101,13 +103,13 @@ target_compile_options(ws-hal-stm32f7-embedded-c PRIVATE ${WS_HAL_WARNING_FLAGS}
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND WS_HAL_STM32F7_USE_FAKE)
     include(CTest)
     if(BUILD_TESTING)
-        foreach(_unit rcc gpio timebase uart)
+        foreach(_unit rcc gpio timebase uart spi)
             add_executable(${_unit}_test tests/${_unit}_test.c)
             target_link_libraries(${_unit}_test PRIVATE ws-hal-stm32f7-embedded-c)
             target_compile_options(${_unit}_test PRIVATE ${WS_HAL_WARNING_FLAGS})
             add_test(NAME ${_unit}_test COMMAND ${_unit}_test)
         endforeach()
-        foreach(_ex rcc_clocks gpio_blink timebase_delay uart_hello)
+        foreach(_ex rcc_clocks gpio_blink timebase_delay uart_hello spi_transfer)
             add_executable(${_ex}_example examples/${_ex}.c)
             target_link_libraries(${_ex}_example PRIVATE ws-hal-stm32f7-embedded-c)
             target_compile_options(${_ex}_example PRIVATE ${WS_HAL_WARNING_FLAGS})
@@ -131,7 +133,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND WS_HAL_STM32F7_USE_FAKE)
         endforeach()
 
         set(_ws_cross_objs)
-        foreach(_src rcc gpio timebase uart)
+        foreach(_src rcc gpio timebase uart spi)
             set(_obj "${_ws_cross_out}/${_src}.o")
             add_custom_command(
                 OUTPUT "${_obj}"
@@ -148,6 +150,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND WS_HAL_STM32F7_USE_FAKE)
                         "${CMAKE_CURRENT_SOURCE_DIR}/include/ws/hal/stm32f7/gpio.h"
                         "${CMAKE_CURRENT_SOURCE_DIR}/include/ws/hal/stm32f7/timebase.h"
                         "${CMAKE_CURRENT_SOURCE_DIR}/include/ws/hal/stm32f7/uart.h"
+                        "${CMAKE_CURRENT_SOURCE_DIR}/include/ws/hal/stm32f7/spi.h"
                 COMMENT "ws-hal-stm32f7 cross-check: src/${_src}.c (Cortex-M7 fpv5-sp-d16)"
                 VERBATIM)
             list(APPEND _ws_cross_objs "${_obj}")
